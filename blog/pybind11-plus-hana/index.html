@@ -204,9 +204,42 @@
 </span><span style="background-color:#f5f5f5;color:#1f1f1f;">                  </span><span style="background-color:#f5f5f5;color:#1f1f1f;">dt[</span><span style="background-color:#f5f5f5;color:#b3933a;">1_c</span><span style="background-color:#f5f5f5;color:#1f1f1f;">][</span><span style="background-color:#f5f5f5;color:#b3933a;">0_c</span><span style="background-color:#f5f5f5;color:#1f1f1f;">].</span><span style="background-color:#f5f5f5;color:#5597d6;">c_str</span><span style="background-color:#f5f5f5;color:#1f1f1f;">();
 </span><span style="background-color:#f5f5f5;color:#1f1f1f;">      </span><span style="background-color:#f5f5f5;color:#1f1f1f;">py::</span><span style="background-color:#f5f5f5;color:#5597d6;">class_</span><span style="background-color:#f5f5f5;color:#1f1f1f;">&lt;Tensor&lt;d, T&gt;&gt;(m, name.</span><span style="background-color:#f5f5f5;color:#5597d6;">c_str</span><span style="background-color:#f5f5f5;color:#1f1f1f;">());
 </span><span style="background-color:#f5f5f5;color:#1f1f1f;">    </span><span style="background-color:#f5f5f5;color:#1f1f1f;">});
+</span></pre><h3 id="adding-named-arguments-to">Adding named arguments to <code>init</code> functions</h3>
+<p>We can also add named arguments to the constructors. For this, we use
+<code>hana::keys</code> to access the field names. The <code>pybind11</code> syntax for adding named arguments is:</p>
+<pre style="background-color:#f5f5f5">
+<span style="background-color:#f5f5f5;color:#1f1f1f;">py::class_&lt;Class&gt;(m, </span><span style="background-color:#f5f5f5;color:#d07711;">&quot;class&quot;</span><span style="background-color:#f5f5f5;color:#1f1f1f;">)
+</span><span style="background-color:#f5f5f5;color:#1f1f1f;">   </span><span style="background-color:#f5f5f5;color:#1f1f1f;">.</span><span style="background-color:#f5f5f5;color:#5597d6;">def</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(py::init&lt;T, S, </span><span style="background-color:#f5f5f5;color:#72ab00;">...</span><span style="background-color:#f5f5f5;color:#1f1f1f;">&gt;, </span><span style="background-color:#f5f5f5;color:#5597d6;">py::arg</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(</span><span style="background-color:#f5f5f5;color:#d07711;">&quot;arg1&quot;</span><span style="background-color:#f5f5f5;color:#1f1f1f;">), </span><span style="background-color:#f5f5f5;color:#5597d6;">py::arg</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(</span><span style="background-color:#f5f5f5;color:#d07711;">&quot;arg2&quot;</span><span style="background-color:#f5f5f5;color:#1f1f1f;">), </span><span style="background-color:#f5f5f5;color:#72ab00;">...</span><span style="background-color:#f5f5f5;color:#1f1f1f;">);
 </span></pre>
+<p>We therefore need to wrap our field names using <code>py::arg</code>, and then apply them
+as additional arguments to the <code>def</code> method. This can be done as follows:</p>
+<pre style="background-color:#f5f5f5">
+<span style="background-color:#f5f5f5;color:#668f14;">auto</span><span style="background-color:#f5f5f5;color:#1f1f1f;"> names </span><span style="background-color:#f5f5f5;color:#72ab00;">= </span><span style="background-color:#f5f5f5;color:#5597d6;">hana::transform</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(
+</span><span style="background-color:#f5f5f5;color:#1f1f1f;">    </span><span style="background-color:#f5f5f5;color:#5597d6;">hana::keys</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(P{}), [](</span><span style="background-color:#f5f5f5;color:#668f14;">auto</span><span style="background-color:#f5f5f5;color:#1f1f1f;"> key) { </span><span style="background-color:#f5f5f5;color:#72ab00;">return </span><span style="background-color:#f5f5f5;color:#5597d6;">py::arg</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(key.</span><span style="background-color:#f5f5f5;color:#5597d6;">c_str</span><span style="background-color:#f5f5f5;color:#1f1f1f;">()); });
+</span><span style="background-color:#f5f5f5;color:#668f14;">auto</span><span style="background-color:#f5f5f5;color:#1f1f1f;"> indirection </span><span style="background-color:#f5f5f5;color:#72ab00;">= </span><span style="background-color:#f5f5f5;color:#1f1f1f;">[</span><span style="background-color:#f5f5f5;color:#72ab00;">&amp;</span><span style="background-color:#f5f5f5;color:#1f1f1f;">](</span><span style="background-color:#f5f5f5;color:#668f14;">auto</span><span style="background-color:#f5f5f5;color:#72ab00;">...</span><span style="background-color:#f5f5f5;color:#1f1f1f;"> args) {
+</span><span style="background-color:#f5f5f5;color:#1f1f1f;">    </span><span style="background-color:#f5f5f5;color:#668f14;">auto</span><span style="background-color:#f5f5f5;color:#1f1f1f;"> pack </span><span style="background-color:#f5f5f5;color:#72ab00;">= </span><span style="background-color:#f5f5f5;color:#1f1f1f;">py::</span><span style="background-color:#f5f5f5;color:#5597d6;">class_</span><span style="background-color:#f5f5f5;color:#1f1f1f;">&lt;P, tomop::Packet&gt;(m, x[</span><span style="background-color:#f5f5f5;color:#b3933a;">0_c</span><span style="background-color:#f5f5f5;color:#1f1f1f;">].</span><span style="background-color:#f5f5f5;color:#5597d6;">c_str</span><span style="background-color:#f5f5f5;color:#1f1f1f;">())
+</span><span style="background-color:#f5f5f5;color:#1f1f1f;">                    </span><span style="background-color:#f5f5f5;color:#1f1f1f;">.</span><span style="background-color:#f5f5f5;color:#5597d6;">def</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(</span><span style="background-color:#f5f5f5;color:#5597d6;">Init</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(), args</span><span style="background-color:#f5f5f5;color:#72ab00;">...</span><span style="background-color:#f5f5f5;color:#1f1f1f;">);
+</span><span style="background-color:#f5f5f5;color:#1f1f1f;">    </span><span style="background-color:#f5f5f5;color:#72ab00;">return</span><span style="background-color:#f5f5f5;color:#1f1f1f;"> pack;
+</span><span style="background-color:#f5f5f5;color:#1f1f1f;">};
+</span><span style="background-color:#f5f5f5;color:#668f14;">auto</span><span style="background-color:#f5f5f5;color:#1f1f1f;"> pack </span><span style="background-color:#f5f5f5;color:#72ab00;">= </span><span style="background-color:#f5f5f5;color:#5597d6;">hana::unpack</span><span style="background-color:#f5f5f5;color:#1f1f1f;">(names, indirection);
+</span></pre><h2 id="example-code">Example code</h2>
+<p>Example source code can be found <a href="https://github.com/jwbuurlage/pybind11_plus_hana">on GitHub</a>.</p>
+
         </article>
     </section>
+
+    <div class="container d-flex justify-content-center mb-5">
+    <!-- AddToAny BEGIN -->
+    <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
+        <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+        <a class="a2a_button_facebook"></a>
+        <a class="a2a_button_twitter"></a>
+        <a class="a2a_button_whatsapp"></a>
+        <a class="a2a_button_email"></a>
+    </div>
+    <script async src="https://static.addtoany.com/menu/page.js"></script>
+    <!-- AddToAny END -->
+    </div>
 
     <div id="disqus_thread"></div>
 <script>
