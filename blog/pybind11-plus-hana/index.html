@@ -55,41 +55,41 @@
 </span><span style="color:#1f1f1f;">py::class_&lt;Pet&gt;(m, </span><span style="color:#d07711;">&quot;Pet&quot;</span><span style="color:#1f1f1f;">).</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(py::</span><span style="color:#5597d6;">init</span><span style="color:#1f1f1f;">&lt;</span><span style="color:#668f14;">const</span><span style="color:#1f1f1f;"> std::string </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">&gt;())
 </span></pre>
 <p>While writing these bindings, I ran into two problems for two different projects, and in both cases they lead to lengthy binding definitions with a lot of repeated code.</p>
-<em></em><a id="sec-1"></a><h2 id="problem-1-many-aggregate-data-types">Problem 1: Many aggregate data types</h2>
+<h2 id="problem-1-many-aggregate-data-types">Problem 1: <em>Many aggregate data types</em><a id="sec-1"></a></h2>
 <p>One project had a lot of aggregate data types, and generating bindings for them required repeating their fields three times: in the definition, when exposing the constructor to Python, and for defining the accessors to the fields. This will inevitably lead to frustrating maintenance work as fields get added and removed. In my case, these data types described packets that would be sent over a network connection, and they would look something like this:</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#668f14;">struct </span><span style="color:#c23f31;">SomePacket </span><span style="color:#1f1f1f;">{
-</span><span style="color:#1f1f1f;">  </span><span style="color:#668f14;">static constexpr auto</span><span style="color:#1f1f1f;"> desc </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> descriptor::some_packet;
-</span><span style="color:#1f1f1f;">  </span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;"> id;
-</span><span style="color:#1f1f1f;">  </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;"> some_payload;
-</span><span style="color:#1f1f1f;">  </span><span style="color:#7f8989;">// ... more fields
+  </span><span style="color:#668f14;">static constexpr auto</span><span style="color:#1f1f1f;"> desc </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> descriptor::some_packet;
+  </span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;"> id;
+  </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;"> some_payload;
+  </span><span style="color:#7f8989;">// ... more fields
 </span><span style="color:#1f1f1f;">};
-</span><span style="color:#1f1f1f;">
+
 </span><span style="color:#668f14;">struct </span><span style="color:#c23f31;">AnotherPacket </span><span style="color:#1f1f1f;">{
-</span><span style="color:#1f1f1f;">  </span><span style="color:#668f14;">static constexpr auto</span><span style="color:#1f1f1f;"> desc </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> descriptor::another_packet;
-</span><span style="color:#1f1f1f;">  </span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;"> id;
-</span><span style="color:#1f1f1f;">  </span><span style="color:#1f1f1f;">std::vector&lt;</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt; another_payload;
-</span><span style="color:#1f1f1f;">  </span><span style="color:#7f8989;">// ... more fields
+  </span><span style="color:#668f14;">static constexpr auto</span><span style="color:#1f1f1f;"> desc </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> descriptor::another_packet;
+  </span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;"> id;
+  std::vector&lt;</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt; another_payload;
+  </span><span style="color:#7f8989;">// ... more fields
 </span><span style="color:#1f1f1f;">};
-</span><span style="color:#1f1f1f;">
+
 </span><span style="color:#7f8989;">// ... many more
 </span></pre>
 <p>Of course in reality packets typically have more than two fields. The binding code would look like this:</p>
 <pre style="background-color:#f5f5f5;">
-<span style="color:#1f1f1f;">  </span><span style="color:#1f1f1f;">py::class_&lt;SomePacket&gt;(m, </span><span style="color:#d07711;">&quot;some_packet&quot;</span><span style="color:#1f1f1f;">)
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(py::</span><span style="color:#5597d6;">init</span><span style="color:#1f1f1f;">&lt;</span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;())
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;id&quot;</span><span style="color:#1f1f1f;">, </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">SomePacket::id)
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;some_payload&quot;</span><span style="color:#1f1f1f;">, </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">SomePacket::some_payload)
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">
-</span><span style="color:#1f1f1f;">  </span><span style="color:#1f1f1f;">py::class_&lt;AnotherPacket&gt;(m, </span><span style="color:#d07711;">&quot;another_packet&quot;</span><span style="color:#1f1f1f;">)
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(py::</span><span style="color:#5597d6;">init</span><span style="color:#1f1f1f;">&lt;</span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;">, std::vector&lt;</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;())
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;id&quot;</span><span style="color:#1f1f1f;">, </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">AnotherPacket::id)
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;another_payload&quot;</span><span style="color:#1f1f1f;">, </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">AnotherPacket::another_payload)
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">
+<span style="color:#1f1f1f;">  py::class_&lt;SomePacket&gt;(m, </span><span style="color:#d07711;">&quot;some_packet&quot;</span><span style="color:#1f1f1f;">)
+    .</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(py::</span><span style="color:#5597d6;">init</span><span style="color:#1f1f1f;">&lt;</span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;())
+    .</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;id&quot;</span><span style="color:#1f1f1f;">, </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">SomePacket::id)
+    .</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;some_payload&quot;</span><span style="color:#1f1f1f;">, </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">SomePacket::some_payload)
+    .</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">);
+
+  py::class_&lt;AnotherPacket&gt;(m, </span><span style="color:#d07711;">&quot;another_packet&quot;</span><span style="color:#1f1f1f;">)
+    .</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(py::</span><span style="color:#5597d6;">init</span><span style="color:#1f1f1f;">&lt;</span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;">, std::vector&lt;</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;())
+    .</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;id&quot;</span><span style="color:#1f1f1f;">, </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">AnotherPacket::id)
+    .</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;another_payload&quot;</span><span style="color:#1f1f1f;">, </span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">AnotherPacket::another_payload)
+    .</span><span style="color:#5597d6;">def_readwrite</span><span style="color:#1f1f1f;">(</span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">);
+
 </span><span style="color:#7f8989;">// ... many more
-</span></pre><em></em><a id="sec-2"></a><h2 id="problem-2-templates">Problem 2: Templates</h2>
+</span></pre><h2 id="problem-2-templates">Problem 2: <em>Templates</em><a id="sec-2"></a></h2>
 <p>A second problem is when you want to generate bindings to templates. In another project, I had many classes and functions that were generic over two parameters: one integer that defines the dimension of the object or problem, and one type parameter representing the scalar type that is used (typically <code>float</code> or <code>double</code>, but maybe in some cases half precision or even quadruple precision floats). An example class template is the following.</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#668f14;">template </span><span style="color:#1f1f1f;">&lt;</span><span style="color:#668f14;">int</span><span style="color:#1f1f1f;"> D, </span><span style="color:#668f14;">typename</span><span style="color:#1f1f1f;"> T&gt;
@@ -98,129 +98,129 @@
 <p>Generating bindings for these objects requires explicitly instantiating them for all the values of <code>D</code> and <code>T</code> that you want to support. This will quickly become cumbersome. Already for this single class, for a limited number of values for <code>D</code> and <code>T</code>, the binding code becomes a mess:</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">1</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_1d_f&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">2</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_2d_f&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">3</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_3d_f&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">4</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_4d_f&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">5</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_5d_f&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">6</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_6d_f&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">1</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_1d_d&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">2</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_2d_d&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">3</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_3d_d&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">4</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_4d_d&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">5</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_5d_d&quot;</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">6</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_6d_d&quot;</span><span style="color:#1f1f1f;">);
-</span></pre><a id="sec-3"></a><h2 id="metaprogramming-to-the-rescue">Metaprogramming to the rescue!</h2>
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">2</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_2d_f&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">3</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_3d_f&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">4</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_4d_f&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">5</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_5d_f&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">6</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_6d_f&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">1</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_1d_d&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">2</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_2d_d&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">3</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_3d_d&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">4</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_4d_d&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">5</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_5d_d&quot;</span><span style="color:#1f1f1f;">);
+py::class_&lt;Tensor&lt;</span><span style="color:#b3933a;">6</span><span style="color:#1f1f1f;">, </span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;&gt;(m, </span><span style="color:#d07711;">&quot;tensor_6d_d&quot;</span><span style="color:#1f1f1f;">);
+</span></pre><h2 id="metaprogramming-to-the-rescue">Metaprogramming to the rescue!<a id="sec-3"></a></h2>
 <p>With <em>Boost.Hana</em>, it is possible to write concise and maintainable Python bindings for both of these problematic cases. For the uninitiated:</p>
 <blockquote>
 <p>Hana is a header-only library for C++ metaprogramming suited for computations on both types and values.</p>
 </blockquote>
 <p>… and computations on types seems to be exactly what we need.</p>
-<a id="sec-3-1"></a><h3 id="automatically-binding-user-defined-types">Automatically binding user-defined types</h3>
+<h3 id="automatically-binding-user-defined-types">Automatically binding user-defined types<a id="sec-3-1"></a></h3>
 <p>First, let us focus on generating bindings to simple user-defined types. In order to avoid listing the (types of the) fields when generating the bindings, we need to be able to <em>inspect</em> our data types programmatically. This <em>introspection</em> of user-defined types is supported by Boost.Hana using either of two macro's.</p>
 <p><code>BOOST_HANA_DEFINE_STRUCT</code> can be used within the original definition of a struct, or <code>BOOST_HANA_ADAPT_STRUCT</code> can be used outside of the original definition (if you cannot, or understandably do not want to touch the definition of your data types). In our example, this would look like this:</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#668f14;">struct </span><span style="color:#c23f31;">SomePacket </span><span style="color:#1f1f1f;">{
-</span><span style="color:#1f1f1f;">  </span><span style="color:#668f14;">static constexpr auto</span><span style="color:#1f1f1f;"> desc </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> descriptor::some_packet;
-</span><span style="color:#1f1f1f;">  </span><span style="color:#5597d6;">BOOST_HANA_DEFINE_STRUCT</span><span style="color:#1f1f1f;">(SomePacket,
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;">, id),
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">(</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">, some_payload));
-</span><span style="color:#1f1f1f;">}
-</span><span style="color:#1f1f1f;">
+  </span><span style="color:#668f14;">static constexpr auto</span><span style="color:#1f1f1f;"> desc </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> descriptor::some_packet;
+  </span><span style="color:#5597d6;">BOOST_HANA_DEFINE_STRUCT</span><span style="color:#1f1f1f;">(SomePacket,
+    (</span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;">, id),
+    (</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">, some_payload));
+}
+
 </span><span style="color:#668f14;">struct </span><span style="color:#c23f31;">AnotherPacket </span><span style="color:#1f1f1f;">{
-</span><span style="color:#1f1f1f;">  </span><span style="color:#668f14;">static constexpr auto</span><span style="color:#1f1f1f;"> desc </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> descriptor::another_packet;
-</span><span style="color:#1f1f1f;">  </span><span style="color:#5597d6;">BOOST_HANA_DEFINE_STRUCT</span><span style="color:#1f1f1f;">(AnotherPacket,
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">(</span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;">, id),
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">(std::vector&lt;</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;, another_payload));
-</span><span style="color:#1f1f1f;">}
+  </span><span style="color:#668f14;">static constexpr auto</span><span style="color:#1f1f1f;"> desc </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> descriptor::another_packet;
+  </span><span style="color:#5597d6;">BOOST_HANA_DEFINE_STRUCT</span><span style="color:#1f1f1f;">(AnotherPacket,
+    (</span><span style="color:#a2a001;">int32_t</span><span style="color:#1f1f1f;">, id),
+    (std::vector&lt;</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;, another_payload));
+}
 </span></pre>
 <p>Now, we have the possibility to loop over the members fields of our packets. This can also simplify code in other places. For example, these network packets have to be serialized, deserialized and measured for size. This can now all be implemented in a function with a one-line body!</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#668f14;">template </span><span style="color:#1f1f1f;">&lt;</span><span style="color:#668f14;">typename</span><span style="color:#1f1f1f;"> Packet, </span><span style="color:#668f14;">typename</span><span style="color:#1f1f1f;"> Buffer&gt;
 </span><span style="color:#668f14;">void </span><span style="color:#c23f31;">fill</span><span style="color:#1f1f1f;">(Packet</span><span style="color:#72ab00;">&amp; </span><span style="color:#5597d6;">packet</span><span style="color:#1f1f1f;">, Buffer</span><span style="color:#72ab00;">&amp; </span><span style="color:#5597d6;">buffer</span><span style="color:#1f1f1f;">) {
-</span><span style="color:#1f1f1f;">    </span><span style="color:#5597d6;">hana::for_each</span><span style="color:#1f1f1f;">(packet, [</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> member) { buffer </span><span style="color:#72ab00;">| </span><span style="color:#5597d6;">hana::second</span><span style="color:#1f1f1f;">(member); });
-</span><span style="color:#1f1f1f;">}
+    </span><span style="color:#5597d6;">hana::for_each</span><span style="color:#1f1f1f;">(packet, [</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> member) { buffer </span><span style="color:#72ab00;">| </span><span style="color:#5597d6;">hana::second</span><span style="color:#1f1f1f;">(member); });
+}
 </span></pre>
 <p>Here, <code>Buffer</code> is a class (<code>serializer</code>, <code>deserializer</code>, or a <code>scale</code>) that implements <code>operator|</code> for all the possible field types. However, these individual functions do not have to be implemented for each packet. With the <code>for_each</code> function, we are able to loop over all <code>(name, value)</code> pairs for the member fields of our packets.</p>
 <p>Going back to the Python bindings, being able to loop over all member fields means we no longer have to explicitly list constructors and accessors. We can generate them automatically!</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#7f8989;">// 1) list packets and the names to give to their Python bindings
 </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> packets </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(
-</span><span style="color:#1f1f1f;">    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;some_packet&quot;</span><span style="color:#1f1f1f;">s, hana::type_c&lt;SomePacket&gt;),
-</span><span style="color:#1f1f1f;">    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;another_packet&quot;</span><span style="color:#1f1f1f;">s, hana::type_c&lt;AnotherPacket&gt;),
-</span><span style="color:#1f1f1f;">  </span><span style="color:#7f8989;">// ... many more
+    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;some_packet&quot;</span><span style="color:#1f1f1f;">s, hana::type_c&lt;SomePacket&gt;),
+    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;another_packet&quot;</span><span style="color:#1f1f1f;">s, hana::type_c&lt;AnotherPacket&gt;),
+  </span><span style="color:#7f8989;">// ... many more
 </span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">
-</span><span style="color:#1f1f1f;">    </span><span style="color:#c23f31;">hana::for_each</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">packets</span><span style="color:#1f1f1f;">, [</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> x) {
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// 1) get C++ type (e.g. SomePacket)
-</span><span style="color:#1f1f1f;">        </span><span style="color:#72ab00;">using</span><span style="color:#1f1f1f;"> P </span><span style="color:#72ab00;">= </span><span style="color:#668f14;">typename decltype</span><span style="color:#1f1f1f;">(</span><span style="color:#72ab00;">+</span><span style="color:#1f1f1f;">(x[</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">]))::type;
-</span><span style="color:#1f1f1f;">
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// 2) get arguments for the constructor, as a tuple of types
-</span><span style="color:#1f1f1f;">        </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> types </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">hana::transform</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::members</span><span style="color:#1f1f1f;">(P{}), [](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> member) {
-</span><span style="color:#1f1f1f;">            </span><span style="color:#72ab00;">return</span><span style="color:#1f1f1f;"> hana::type_c</span><span style="color:#72ab00;">&lt;</span><span style="color:#668f14;">decltype</span><span style="color:#1f1f1f;">(member)</span><span style="color:#72ab00;">&gt;</span><span style="color:#1f1f1f;">;
-</span><span style="color:#1f1f1f;">        </span><span style="color:#1f1f1f;">});
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// ... types is now e.g. (int32_t, float) for SomePacket
-</span><span style="color:#1f1f1f;">
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// 3) we &#39;unpack&#39; this tuple inside py::init,
-</span><span style="color:#1f1f1f;">        </span><span style="color:#72ab00;">using</span><span style="color:#1f1f1f;"> Init </span><span style="color:#72ab00;">= </span><span style="color:#668f14;">typename decltype</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::unpack</span><span style="color:#1f1f1f;">(
-</span><span style="color:#1f1f1f;">            </span><span style="color:#1f1f1f;">types, hana::template_&lt;py::detail::initimpl::constructor&gt;))::type;
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// ... now Init is e.g py::init&lt;int32_t, float&gt;
-</span><span style="color:#1f1f1f;">
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// 4) register class with Python
-</span><span style="color:#1f1f1f;">        </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> packet </span><span style="color:#72ab00;">= </span><span style="color:#1f1f1f;">py::</span><span style="color:#5597d6;">class_</span><span style="color:#1f1f1f;">&lt;P, Packet&gt;(m, x[</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">].</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">()).</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">Init</span><span style="color:#1f1f1f;">());
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// ... x[0_c] contains the python name, e.g. some_packet, and Packet is
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// some base class.
-</span><span style="color:#1f1f1f;">
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// 5) register accessors
-</span><span style="color:#1f1f1f;">        </span><span style="color:#5597d6;">hana::fold</span><span style="color:#1f1f1f;">(hana::</span><span style="color:#5597d6;">accessors</span><span style="color:#1f1f1f;">&lt;P&gt;(), </span><span style="color:#5597d6;">std::ref</span><span style="color:#1f1f1f;">(packet),
-</span><span style="color:#1f1f1f;">                   </span><span style="color:#1f1f1f;">[](py::class_&lt;P, Packet&gt;</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;"> c,
-</span><span style="color:#1f1f1f;">                      </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> ka) -&gt; </span><span style="color:#5597d6;">py</span><span style="color:#1f1f1f;">::</span><span style="color:#5597d6;">class_</span><span style="color:#1f1f1f;">&lt;P, Packet&gt;</span><span style="color:#72ab00;">&amp; </span><span style="color:#1f1f1f;">{
-</span><span style="color:#1f1f1f;">                       </span><span style="color:#72ab00;">return</span><span style="color:#1f1f1f;"> c.</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::first</span><span style="color:#1f1f1f;">(ka).</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">(), [</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">ka](P</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;"> p) {
-</span><span style="color:#1f1f1f;">                           </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">hana::second</span><span style="color:#1f1f1f;">(ka)(p);
-</span><span style="color:#1f1f1f;">                       </span><span style="color:#1f1f1f;">});
-</span><span style="color:#1f1f1f;">                   </span><span style="color:#1f1f1f;">});
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// ... this may look complicated if you have not seen folds before, but
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// this is essentially iteratively calling .def on the registered packet
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// class. Note that we require the lambda indirection for pybind11 to
-</span><span style="color:#1f1f1f;">        </span><span style="color:#7f8989;">// recognize the member function.
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">});
+
+    </span><span style="color:#c23f31;">hana::for_each</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">packets</span><span style="color:#1f1f1f;">, [</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> x) {
+        </span><span style="color:#7f8989;">// 1) get C++ type (e.g. SomePacket)
+        </span><span style="color:#72ab00;">using</span><span style="color:#1f1f1f;"> P </span><span style="color:#72ab00;">= </span><span style="color:#668f14;">typename decltype</span><span style="color:#1f1f1f;">(</span><span style="color:#72ab00;">+</span><span style="color:#1f1f1f;">(x[</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">]))::type;
+
+        </span><span style="color:#7f8989;">// 2) get arguments for the constructor, as a tuple of types
+        </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> types </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">hana::transform</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::members</span><span style="color:#1f1f1f;">(P{}), [](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> member) {
+            </span><span style="color:#72ab00;">return</span><span style="color:#1f1f1f;"> hana::type_c</span><span style="color:#72ab00;">&lt;</span><span style="color:#668f14;">decltype</span><span style="color:#1f1f1f;">(member)</span><span style="color:#72ab00;">&gt;</span><span style="color:#1f1f1f;">;
+        });
+        </span><span style="color:#7f8989;">// ... types is now e.g. (int32_t, float) for SomePacket
+
+        // 3) we &#39;unpack&#39; this tuple inside py::init,
+        </span><span style="color:#72ab00;">using</span><span style="color:#1f1f1f;"> Init </span><span style="color:#72ab00;">= </span><span style="color:#668f14;">typename decltype</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::unpack</span><span style="color:#1f1f1f;">(
+            types, hana::template_&lt;py::detail::initimpl::constructor&gt;))::type;
+        </span><span style="color:#7f8989;">// ... now Init is e.g py::init&lt;int32_t, float&gt;
+
+        // 4) register class with Python
+        </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> packet </span><span style="color:#72ab00;">= </span><span style="color:#1f1f1f;">py::</span><span style="color:#5597d6;">class_</span><span style="color:#1f1f1f;">&lt;P, Packet&gt;(m, x[</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">].</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">()).</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">Init</span><span style="color:#1f1f1f;">());
+        </span><span style="color:#7f8989;">// ... x[0_c] contains the python name, e.g. some_packet, and Packet is
+        // some base class.
+
+        // 5) register accessors
+        </span><span style="color:#5597d6;">hana::fold</span><span style="color:#1f1f1f;">(hana::</span><span style="color:#5597d6;">accessors</span><span style="color:#1f1f1f;">&lt;P&gt;(), </span><span style="color:#5597d6;">std::ref</span><span style="color:#1f1f1f;">(packet),
+                   [](py::class_&lt;P, Packet&gt;</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;"> c,
+                      </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> ka) -&gt; </span><span style="color:#5597d6;">py</span><span style="color:#1f1f1f;">::</span><span style="color:#5597d6;">class_</span><span style="color:#1f1f1f;">&lt;P, Packet&gt;</span><span style="color:#72ab00;">&amp; </span><span style="color:#1f1f1f;">{
+                       </span><span style="color:#72ab00;">return</span><span style="color:#1f1f1f;"> c.</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::first</span><span style="color:#1f1f1f;">(ka).</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">(), [</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">ka](P</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;"> p) {
+                           </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">hana::second</span><span style="color:#1f1f1f;">(ka)(p);
+                       });
+                   });
+        </span><span style="color:#7f8989;">// ... this may look complicated if you have not seen folds before, but
+        // this is essentially iteratively calling .def on the registered packet
+        // class. Note that we require the lambda indirection for pybind11 to
+        // recognize the member function.
+    </span><span style="color:#1f1f1f;">});
 </span></pre>
 <p>Now, generating bindings for a new packet is completely automatic: we only have to add it to the <code>packets</code> list. Also, when changing/adding/removing fields from a packet, the Python bindings are updated automatically. Neat!</p>
-<a id="sec-3-2"></a><h3 id="automatically-instantiating-templates">Automatically instantiating templates</h3>
+<h3 id="automatically-instantiating-templates">Automatically instantiating templates<a id="sec-3-2"></a></h3>
 <p>We can also use Boost.Hana to generate combinations of <code>D</code> and <code>T</code> in our <code>Tensor</code> example.</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> ds </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(
-</span><span style="color:#1f1f1f;">    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;1d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">), </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;2d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">2_c</span><span style="color:#1f1f1f;">),
-</span><span style="color:#1f1f1f;">    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;3d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">3_c</span><span style="color:#1f1f1f;">), </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;4d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">4_c</span><span style="color:#1f1f1f;">),
-</span><span style="color:#1f1f1f;">    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;5d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">5_c</span><span style="color:#1f1f1f;">), </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;6d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">6_c</span><span style="color:#1f1f1f;">));
-</span><span style="color:#1f1f1f;">
+    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;1d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">), </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;2d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">2_c</span><span style="color:#1f1f1f;">),
+    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;3d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">3_c</span><span style="color:#1f1f1f;">), </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;4d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">4_c</span><span style="color:#1f1f1f;">),
+    </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;5d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">5_c</span><span style="color:#1f1f1f;">), </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;6d&quot;</span><span style="color:#1f1f1f;">s, </span><span style="color:#b3933a;">6_c</span><span style="color:#1f1f1f;">));
+
 </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> ts </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;f&quot;</span><span style="color:#1f1f1f;">s, hana::type_c&lt;</span><span style="color:#668f14;">float</span><span style="color:#1f1f1f;">&gt;),
-</span><span style="color:#1f1f1f;">                           </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;d&quot;</span><span style="color:#1f1f1f;">s, hana::type_c&lt;</span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;));
-</span><span style="color:#1f1f1f;">
+                           </span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;d&quot;</span><span style="color:#1f1f1f;">s, hana::type_c&lt;</span><span style="color:#668f14;">double</span><span style="color:#1f1f1f;">&gt;));
+
 </span><span style="color:#c23f31;">hana::for_each</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::cartesian_product</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">hana::make_tuple</span><span style="color:#1f1f1f;">(ds, ts)),
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">[</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> dt) {
-</span><span style="color:#1f1f1f;">      </span><span style="color:#668f14;">const auto</span><span style="color:#1f1f1f;"> d </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> dt[</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">][</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">];
-</span><span style="color:#1f1f1f;">      </span><span style="color:#72ab00;">using</span><span style="color:#1f1f1f;"> T </span><span style="color:#72ab00;">= </span><span style="color:#668f14;">typename decltype</span><span style="color:#1f1f1f;">(</span><span style="color:#72ab00;">+</span><span style="color:#1f1f1f;">dt[</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">][</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">])::type;
-</span><span style="color:#1f1f1f;">      </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> name </span><span style="color:#72ab00;">= </span><span style="color:#d07711;">&quot;tensor_&quot;</span><span style="color:#1f1f1f;">s </span><span style="color:#72ab00;">+</span><span style="color:#1f1f1f;"> dt[</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">][</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">].</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">() </span><span style="color:#72ab00;">+ </span><span style="color:#d07711;">&quot;_&quot;</span><span style="color:#1f1f1f;">s </span><span style="color:#72ab00;">+
-</span><span style="color:#1f1f1f;">                  </span><span style="color:#1f1f1f;">dt[</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">][</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">].</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">();
-</span><span style="color:#1f1f1f;">      </span><span style="color:#1f1f1f;">py::</span><span style="color:#5597d6;">class_</span><span style="color:#1f1f1f;">&lt;Tensor&lt;d, T&gt;&gt;(m, name.</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">());
-</span><span style="color:#1f1f1f;">    </span><span style="color:#1f1f1f;">});
+    [</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> dt) {
+      </span><span style="color:#668f14;">const auto</span><span style="color:#1f1f1f;"> d </span><span style="color:#72ab00;">=</span><span style="color:#1f1f1f;"> dt[</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">][</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">];
+      </span><span style="color:#72ab00;">using</span><span style="color:#1f1f1f;"> T </span><span style="color:#72ab00;">= </span><span style="color:#668f14;">typename decltype</span><span style="color:#1f1f1f;">(</span><span style="color:#72ab00;">+</span><span style="color:#1f1f1f;">dt[</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">][</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">])::type;
+      </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> name </span><span style="color:#72ab00;">= </span><span style="color:#d07711;">&quot;tensor_&quot;</span><span style="color:#1f1f1f;">s </span><span style="color:#72ab00;">+</span><span style="color:#1f1f1f;"> dt[</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">][</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">].</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">() </span><span style="color:#72ab00;">+ </span><span style="color:#d07711;">&quot;_&quot;</span><span style="color:#1f1f1f;">s </span><span style="color:#72ab00;">+</span><span style="color:#1f1f1f;">
+                  dt[</span><span style="color:#b3933a;">1_c</span><span style="color:#1f1f1f;">][</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">].</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">();
+      py::</span><span style="color:#5597d6;">class_</span><span style="color:#1f1f1f;">&lt;Tensor&lt;d, T&gt;&gt;(m, name.</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">());
+    });
 </span></pre><h3 id="adding-named-arguments-to-init-functions">Adding named arguments to <code>init</code> functions</h3>
 <p>We can also add named arguments to the constructors. For this, we use
 <code>hana::keys</code> to access the field names. The <code>pybind11</code> syntax for adding named arguments is:</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#1f1f1f;">py::class_&lt;Class&gt;(m, </span><span style="color:#d07711;">&quot;class&quot;</span><span style="color:#1f1f1f;">)
-</span><span style="color:#1f1f1f;">   </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(py::init&lt;T, S, </span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">&gt;, </span><span style="color:#5597d6;">py::arg</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;arg1&quot;</span><span style="color:#1f1f1f;">), </span><span style="color:#5597d6;">py::arg</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;arg2&quot;</span><span style="color:#1f1f1f;">), </span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">);
+   .</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(py::init&lt;T, S, </span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">&gt;, </span><span style="color:#5597d6;">py::arg</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;arg1&quot;</span><span style="color:#1f1f1f;">), </span><span style="color:#5597d6;">py::arg</span><span style="color:#1f1f1f;">(</span><span style="color:#d07711;">&quot;arg2&quot;</span><span style="color:#1f1f1f;">), </span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">);
 </span></pre>
 <p>We therefore need to wrap our field names using <code>py::arg</code>, and then apply them
 as additional arguments to the <code>def</code> method. This can be done as follows:</p>
 <pre style="background-color:#f5f5f5;">
 <span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> names </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">hana::transform</span><span style="color:#1f1f1f;">(
-</span><span style="color:#1f1f1f;">    </span><span style="color:#5597d6;">hana::keys</span><span style="color:#1f1f1f;">(P{}), [](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> key) { </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">py::arg</span><span style="color:#1f1f1f;">(key.</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">()); });
+    </span><span style="color:#5597d6;">hana::keys</span><span style="color:#1f1f1f;">(P{}), [](</span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> key) { </span><span style="color:#72ab00;">return </span><span style="color:#5597d6;">py::arg</span><span style="color:#1f1f1f;">(key.</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">()); });
 </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> indirection </span><span style="color:#72ab00;">= </span><span style="color:#1f1f1f;">[</span><span style="color:#72ab00;">&amp;</span><span style="color:#1f1f1f;">](</span><span style="color:#668f14;">auto</span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;"> args) {
-</span><span style="color:#1f1f1f;">    </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> pack </span><span style="color:#72ab00;">= </span><span style="color:#1f1f1f;">py::</span><span style="color:#5597d6;">class_</span><span style="color:#1f1f1f;">&lt;P, tomop::Packet&gt;(m, x[</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">].</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">())
-</span><span style="color:#1f1f1f;">                    </span><span style="color:#1f1f1f;">.</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">Init</span><span style="color:#1f1f1f;">(), args</span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">);
-</span><span style="color:#1f1f1f;">    </span><span style="color:#72ab00;">return</span><span style="color:#1f1f1f;"> pack;
-</span><span style="color:#1f1f1f;">};
+    </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> pack </span><span style="color:#72ab00;">= </span><span style="color:#1f1f1f;">py::</span><span style="color:#5597d6;">class_</span><span style="color:#1f1f1f;">&lt;P, tomop::Packet&gt;(m, x[</span><span style="color:#b3933a;">0_c</span><span style="color:#1f1f1f;">].</span><span style="color:#5597d6;">c_str</span><span style="color:#1f1f1f;">())
+                    .</span><span style="color:#5597d6;">def</span><span style="color:#1f1f1f;">(</span><span style="color:#5597d6;">Init</span><span style="color:#1f1f1f;">(), args</span><span style="color:#72ab00;">...</span><span style="color:#1f1f1f;">);
+    </span><span style="color:#72ab00;">return</span><span style="color:#1f1f1f;"> pack;
+};
 </span><span style="color:#668f14;">auto</span><span style="color:#1f1f1f;"> pack </span><span style="color:#72ab00;">= </span><span style="color:#5597d6;">hana::unpack</span><span style="color:#1f1f1f;">(names, indirection);
 </span></pre><h2 id="example-code">Example code</h2>
 <p>Example source code can be found <a href="https://github.com/jwbuurlage/pybind11_plus_hana">on GitHub</a>.</p>
