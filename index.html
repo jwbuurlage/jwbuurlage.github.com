@@ -31,21 +31,23 @@
     <div class="col-sm">
 
         <h1>About</h1>
-        <p>My research focuses on parallel algorithms and distributed-memory methods in inverse problems. I am part of the computational imaging group at CWI, where I work on various topics in real-time 3D tomography.</p>
+        <p>I am a research engineer in the Mixed Reality & AI lab of Micorosft in Zurich, Switzerland. <br/><br/>
+
+            Previously, I was a PhD student in the computational imaging group at CWI, where I worked on various topics in real-time 3D tomography. I am interested in parallel algorithms and distributed-memory methods.</p>
     </div>
     <div class="col-sm-6">
         <div class="card">
             <div class="card-body">
                 <img width="100px" class="rounded float-right mr-3" src="/jw.jpg" />
                 <h4 class="card-title">Jan-Willem Buurlage</h4>
-                <h5 class="card-subtitle mb-2 text-muted">PhD Candidate</h5>
-                <h5 class="card-subtitle mb-2 text-muted">Centrum Wiskunde &amp; Informatica (CWI)</h5>
-                <h5 class="card-subtitle mb-2 text-muted">j.buurlage &lt;at&gt; cwi.nl</h5>
+                <h5 class="card-subtitle mb-2 text-muted">Research SDE - Mixed Reality &amp; AI Lab</h5>
+                <h5 class="card-subtitle mb-2 text-muted">Microsoft</h5>
+                <h5 class="card-subtitle mb-2 text-muted"></h5>
             </div>
             <div class="card-header">
             <ul class="nav nav-pills card-header-pills">
                 <li class="nav-item"><a class="nav-link" href="https://github.com/jwbuurlage">GitHub</a></li>
-                <li class="nav-item"><a class="nav-link" href="https://www.twitter.com/jwbuurlage">Twitter</a></li>
+                <!-- <li class="nav-item"><a class="nav-link" href="https://www.twitter.com/jwbuurlage">Twitter</a></li> -->
                 <li class="nav-item"><a class="nav-link" href="https://www.linkedin.com/in/jwbuurlage">LinkedIn</a></li>
             </ul>
             </div>
@@ -56,17 +58,50 @@
     </div>
 
     <main>
-    <h1 id="articles">Articles</h1>
+    <h1 id="software">Software</h1>
+<img src="https://cicwi.github.io/RECAST3D/images/rotate_slice.gif" class="float-right" width="400px" />
+<h4 id="active">Active</h4>
+<ul>
+<li><a href="https://jwbuurlage.github.io/Bulk">Bulk</a>. Modern interface for writing
+parallel programs in C++ in bulk-synchronous style.</li>
+<li><em>Real-time reconstructions for tomography</em>:
+<ul>
+<li><a href="https://cicwi.github.io/RECAST3D">RECAST3D</a>. Real-time visualization tool
+for on-demand reconstruction of tomographic data.</li>
+<li><a href="https://cicwi.github.io/TomoPackets">TomoPackets</a>. A library for real-time
+tomography pipelines based on ZeroMQ.</li>
+<li><a href="https://cicwi.github.io/">SliceRecon</a>. A library for on-demand tomographic
+reconstructions of arbitrary slices.</li>
+</ul>
+</li>
+<li><a href="http://www.github.com/jwbuurlage/Tomos">Tomos</a>. A library for distributed tomographic reconstruction.</li>
+</ul>
+<h4 id="past">Past</h4>
+<ul>
+<li><a href="https://jwbuurlage.github.io/epiphany-bsp/">Epiphany BSP</a>. A BSPlib implementation for the Epiphany coprocessor.</li>
+<li><a href="http://www.github.com/jwbuurlage/Zee">Zee</a>. Framework for partitioning and using sparse matrices.</li>
+</ul>
+<h1 id="publications">Publications</h1>
 <h4 id="2020">2020</h4>
 <ul>
-<li><em>A projection-based partitioning method for distributed tomographic reconstruction</em>.
-JW Buurlage, RH Bisseling, WJ Palenstijn, KJ Batenburg. SIAM Conference on Parallel Processing for Scientific Computing (2020, Accepted for publication)</li>
+<li>
+<p><strong>Real-time segmentation for tomographic imaging</strong>.
+RA Schoonhoven, JW Buurlage, DM Pelt, KJ Batenburg. IEEE International Workshop on Machine Learning for Signal Processing (Accepted)</p>
+</li>
+<li>
+<p><strong>Noise2Filter: fast, self-supervised learning and real-time reconstruction for 3D Computed Tomography</strong>.
+MJ Lagerwerf, AA Hendriksen, JW Buurlage, KJ Batenburg.  Machine Learning: Science and Technology (Accepted)</p>
+</li>
+<li>
+<p><a href="https://doi.org/10.1137/1.9781611976137.6">A projection-based partitioning method for distributed tomographic reconstruction</a>.
+JW Buurlage, RH Bisseling, WJ Palenstijn, KJ Batenburg. SIAM Conference on Parallel Processing for Scientific Computing (2020)</p>
+</li>
 </ul>
 <h4 id="2019">2019</h4>
 <ul>
 <li>
-<p><em>Real-time reconstruction and visualisation towards dynamic feedback control during time-resolved tomography experiments at TOMCAT</em>.
-JW Buurlage, CM Schleputz et al. Scientific Reports (2019, Accepted for publication)</p>
+<p><a href="https://doi.org/10.1038/s41598-019-54647-4">Real-time reconstruction and visualisation towards dynamic feedback control during time-resolved tomography experiments at TOMCAT</a>.
+JW Buurlage, CM Schleputz et al. Scientific Reports (2019)</p>
 </li>
 <li>
 <p><a href="https://doi.org/10.1109/TRPMS.2019.2942186">Multigrid reconstruction in tomographic imaging.</a>
@@ -94,10 +129,14 @@ Measurement Science and Technology (2018)</li>
 <li><a href="https://scholar.google.nl/scholar?cluster=18383112231106166666&amp;hl=nl&amp;as_sdt=0,5&amp;sciodt=0,5">Self-Improving Sparse Matrix Partitioning and Bulk-Synchronous Pseudostreaming</a>. JW Buurlage. Master's thesis, Utrecht University (2016).</li>
 </ul>
 <h1 id="talks">Talks</h1>
+<h4 id="2020-1">2020</h4>
+<ul>
+<li><em>2020-02-13</em>: <strong>A projection-based partitioning method for distributed tomographic reconstruction</strong>. <em>SIAM Conf. Parallel Processing for Scientific Computing 2020</em>. Seattle, WA, United States.</li>
+</ul>
 <h4 id="2019-1">2019</h4>
 <ul>
 <li>
-<p>2019-07-12: Partitioning strategies for large-scale tomographic inversion. <em>Applied Inverse Problems</em>. Grenoble, France.</p>
+<p><em>2019-07-12</em>: <strong>Partitioning strategies for large-scale tomographic inversion</strong>. <em>Applied Inverse Problems</em>. Grenoble, France.</p>
 </li>
 <li>
 <p><em>2019-01-22</em>: <a href="https://jwbuurlage.github.io/20190122-this-weeks-discoveries.pdf">Data partitioning strategies for 3D tomographic imaging</a>.
@@ -123,7 +162,7 @@ Tomography seminar. DTU, Kongens Lyngby, Denmark.</li>
 Guest lecture in the course <em>Parallel algorithms</em>. UU, Utrecht, The Netherlands.</li>
 <li><em>2017-05-08</em>: <a href="https://jwbuurlage.github.io/2017-05-08-rt-tomography-vortech.pdf">Algorithms and methods for real-time tomography</a>.
 Lunch talk. VORtech, Delft, The Netherlands.</li>
-<li><em>2017-04-11</em>: <a href="https://jwbuurlage.github.io/2017-04-11-slicer-presentation.pdf">Sofware tools for on demand slice reconstruction</a>.
+<li><em>2017-04-11</em>: <a href="https://jwbuurlage.github.io/2017-04-11-slicer-presentation.pdf">Sofware tools for on-demand slice reconstruction</a>.
 Focused Mini-Workshop on Real-Time Tomography. CWI, Amsterdam, The Netherlands.</li>
 </ul>
 <h4 id="2016-1">2016</h4>
@@ -132,29 +171,6 @@ Focused Mini-Workshop on Real-Time Tomography. CWI, Amsterdam, The Netherlands.<
 Guest lecture in the course <em>Parallel algorithms</em>. UU, Utrecht, The Netherlands.</li>
 <li><em>2016-07-05</em>: <a href="https://jwbuurlage.github.io/2016-07-05-bsps-presentation-hlpp.pdf">Bulk-synchronous pseudo-streaming for many-core accelerators</a>
 HLPP 2016, International Symposium on High-Level Parallel Programming and Applications. Muenster, Germany.</li>
-</ul>
-<h1 id="software">Software</h1>
-<img src="https://cicwi.github.io/RECAST3D/images/rotate_slice.gif" class="float-right" width="400px" />
-<h4 id="active-projects">Active projects</h4>
-<ul>
-<li><a href="https://jwbuurlage.github.io/Bulk">Bulk</a>. Modern interface for writing
-parallel programs in C++ in bulk-synchronous style.</li>
-<li><em>Real-time reconstructions for tomography</em>:
-<ul>
-<li><a href="https://cicwi.github.io/RECAST3D">RECAST3D</a>. Real-time visualization tool
-for on-demand reconstruction of tomographic data.</li>
-<li><a href="https://cicwi.github.io/TomoPackets">TomoPackets</a>. A library for real-time
-tomography pipelines based on ZeroMQ.</li>
-<li><a href="https://cicwi.github.io/">SliceRecon</a>. A library for on-demand tomographic
-reconstructions of arbitrary slices.</li>
-</ul>
-</li>
-<li><a href="http://www.github.com/jwbuurlage/Tomos">Tomos</a>. A library for distributed tomographic reconstruction.</li>
-</ul>
-<h4 id="archive">Archive</h4>
-<ul>
-<li><a href="https://jwbuurlage.github.io/epiphany-bsp/">Epiphany BSP</a>. A BSPlib implementation for the Epiphany coprocessor.</li>
-<li><a href="http://www.github.com/jwbuurlage/Zee">Zee</a>. Framework for partitioning and using sparse matrices.</li>
 </ul>
 <h1 id="teaching">Teaching</h1>
 <ul>
